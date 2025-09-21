@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "138106899280",
+    "project_id": "pushnotification-f9cc5",
+    "storage_bucket": "pushnotification-f9cc5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:138106899280:android:1c551d42b679527a35ba55",
+        "android_client_info": {
+          "package_name": "com.gurubaa.news"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsz2A4Zy8822GkrgIrz-Ye_kKIbOt4LWs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

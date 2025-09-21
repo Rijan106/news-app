@@ -1,0 +1,68 @@
+name: gurubaa_news
+description: Gurubaa News - Your trusted source for the latest news and updates
+version: 1.0.0+2
+publish_to: "none"
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Networking + parsing
+  http: ^1.2.2
+
+  # Render HTML content in article view
+  flutter_html: ^3.0.0-beta.2
+
+  # Launch URLs and external browser
+  url_launcher: ^6.3.2
+  google_fonts: ^6.1.0
+  intl: ^0.20.2 # For DateFormat
+  shimmer: ^3.0.0
+  pdfx: ^2.6.0
+
+  # Storage and caching
+  shared_preferences: ^2.2.3
+
+  # Image handling
+  cached_network_image: ^3.3.1
+
+  # Share functionality
+  share_plus: ^11.1.0
+
+  # State management
+  provider: ^6.1.2
+
+  # Additional utilities
+  fluttertoast: ^8.2.6
+  connectivity_plus: ^6.0.5
+  firebase_messaging: ^16.0.1
+  html_unescape: ^2.0.0
+
+  # WebView for embedded content
+  webview_flutter: ^4.8.0
+
+  # Local notifications
+  flutter_local_notifications: ^18.0.1
+  firebase_core: ^4.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  mockito: ^5.4.4
+  build_runner: ^2.4.8
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+flutter_icons:
+  android: true
+  ios: true
+  web:
+    generate: true
+  image_path: "lib/assets/logo.jpg"
