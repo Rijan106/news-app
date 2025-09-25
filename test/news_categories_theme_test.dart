@@ -54,8 +54,8 @@ void main() {
         ),
       );
 
-      // Wait for initial loading
-      await tester.pump(const Duration(seconds: 1));
+      // Wait for initial loading - reduced time
+      await tester.pump(const Duration(milliseconds: 500));
 
       // Verify initial theme is light
       expect(themeProvider.isDarkMode, isFalse);
@@ -84,8 +84,8 @@ void main() {
         ),
       );
 
-      // Wait for initial loading
-      await tester.pump(const Duration(seconds: 1));
+      // Wait for initial loading - reduced time
+      await tester.pump(const Duration(milliseconds: 500));
 
       final appBar = find.byType(AppBar);
       expect(appBar, findsOneWidget);
@@ -110,8 +110,8 @@ void main() {
         ),
       );
 
-      // Wait for initial loading and categories to load
-      await tester.pump(const Duration(seconds: 2));
+      // Wait for initial loading and categories to load - reduced time
+      await tester.pump(const Duration(milliseconds: 800));
 
       final tabBar = find.byType(TabBar);
       if (tabBar.evaluate().isNotEmpty) {

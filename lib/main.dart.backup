@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'providers/theme_provider.dart';
 import 'providers/search_provider.dart';
 import 'providers/notification_provider.dart';
-import 'services/app_initialization_service.dart';
+import 'services/notification_service.dart';
 import 'pages/home_page.dart';
 import 'pages/news_tab_page.dart';
 import 'pages/bookmarks_page.dart';
@@ -13,13 +15,46 @@ import 'pages/recently_viewed_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Use the centralized initialization service
-  final appInitService = AppInitializationService();
-  await appInitService.initializeApp();
+  // Initialize Firebase optionally - app will work without it
+  bool firebaseInitialized = false;
+  try {
+    if (kIsWeb) {
+      // For web platform, provide explicit options
+      await Firebase.initializeApp(
+        options: const FirebaseOptions(
+          apiKey: "AIzaSyCsz2A4Zy8822GkrgIrz-Ye_kKIbOt4LWs",
+          authDomain: "pushnotification-f9cc5.firebaseapp.com",
+          projectId: "pushnotification-f9cc5",
+          storageBucket: "pushnotification-f9cc5.firebasestorage.app",
+          messagingSenderId: "138106899280",
+          appId: "1:138106899280:web:1c551d42b679527a35ba55",
+        ),
+      );
+    } else {
+      // For mobile platforms, use default initialization (reads from google-services.json)
+      await Firebase.initializeApp();
+    }
+    firebaseInitialized = true;
+    debugPrint('✅ Firebase initialized successfully');
+  } catch (e) {
+    debugPrint('⚠️ Firebase initialization failed: $e');
+    debugPrint('📱 App will continue without Firebase features');
+  }
+
+  // Initialize notification service only if Firebase is available
+  if (firebaseInitialized) {
+    try {
+      await NotificationService().init();
+      debugPrint('✅ Notification service initialized');
+    } catch (e) {
+      debugPrint('⚠️ Notification service initialization failed: $e');
+    }
+  } else {
+    debugPrint(
+        '📱 Skipping notification service initialization (Firebase not available)');
+  }
 
   debugPrint('🚀 Starting Gurubaa News App...');
-  debugPrint(appInitService.getInitializationStatus());
-
   runApp(const GurubaaNewsApp());
 }
 

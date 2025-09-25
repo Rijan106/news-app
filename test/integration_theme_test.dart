@@ -29,7 +29,7 @@ void main() {
             builder: (context, themeProvider, child) {
               return MaterialApp(
                 theme: themeProvider.theme,
-                home: const HomePage(),
+                home: const MainLayout(),
                 routes: {
                   '/settings': (context) => const SettingsPage(),
                   '/bookmarks': (context) => const BookmarksPage(),
@@ -46,16 +46,20 @@ void main() {
       // Verify initial theme
       expect(themeProvider.isDarkMode, isFalse);
 
-      // Navigate to settings
-      // await tester.tap(find.byIcon(Icons.settings));
-      // await tester.pumpAndSettle();
+      // Open drawer to access settings
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+
+      // Navigate to settings through drawer
+      await tester.tap(find.text('Settings'));
+      await tester.pumpAndSettle();
 
       // Verify settings page is displayed
       expect(find.text('Settings'), findsOneWidget);
 
-      // Find and tap theme toggle
-      final themeSwitch = find.byType(Switch);
-      expect(themeSwitch, findsOneWidget);
+      // Find and tap theme toggle switch
+      final themeSwitch = find.byType(Switch).first;
+      expect(themeSwitch, findsWidgets);
 
       await tester.tap(themeSwitch);
       await tester.pumpAndSettle();
@@ -80,7 +84,7 @@ void main() {
             builder: (context, themeProvider, child) {
               return MaterialApp(
                 theme: themeProvider.theme,
-                home: const HomePage(),
+                home: const MainLayout(),
                 routes: {
                   '/settings': (context) => const SettingsPage(),
                   '/bookmarks': (context) => const BookmarksPage(),
@@ -97,17 +101,26 @@ void main() {
       themeProvider.toggleTheme();
       await tester.pumpAndSettle();
 
-      // Navigate to bookmarks
-      await tester.tap(find.byIcon(Icons.bookmark));
+      // Open drawer and navigate to bookmarks
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('My Bookmarks'));
       await tester.pumpAndSettle();
 
       // Verify theme is maintained
       expect(themeProvider.isDarkMode, isTrue);
-      expect(find.text('Bookmarks'), findsOneWidget);
+      expect(find.text('My Bookmarks'), findsOneWidget);
 
-      // Navigate to settings
-      // await tester.tap(find.byIcon(Icons.settings));
-      // await tester.pumpAndSettle();
+      // Navigate back and go to settings
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Settings'));
+      await tester.pumpAndSettle();
 
       // Verify theme is still maintained
       expect(themeProvider.isDarkMode, isTrue);
@@ -123,7 +136,7 @@ void main() {
             builder: (context, themeProvider, child) {
               return MaterialApp(
                 theme: themeProvider.theme,
-                home: const HomePage(),
+                home: const MainLayout(),
                 routes: {
                   '/settings': (context) => const SettingsPage(),
                 },
@@ -144,8 +157,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Navigate to settings to verify theme consistency
-      // await tester.tap(find.byIcon(Icons.settings));
-      // await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Settings'));
+      await tester.pumpAndSettle();
 
       // Verify dark theme is applied
       expect(themeProvider.isDarkMode, isTrue);
