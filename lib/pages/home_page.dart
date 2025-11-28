@@ -22,7 +22,6 @@ class _HomePageState extends State<HomePage> {
   bool _isLoadingMore = false;
   int _currentPage = 1;
   bool _hasMorePages = true;
-  final int _perPage = 10;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -39,6 +38,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onScroll() {
+    // Don't load more if user is searching
+    if (_searchQuery.isNotEmpty) return;
+
     if (_scrollController.position.pixels ==
         _scrollController.position.maxScrollExtent) {
       _loadMore();
@@ -60,8 +62,9 @@ class _HomePageState extends State<HomePage> {
       });
 
       final page = loadMore ? _currentPage + 1 : 1;
+      // Load 100 articles at once for comprehensive search
       final data = await _newsService.fetchPosts(
-          forceRefresh: !loadMore, page: page, perPage: _perPage);
+          forceRefresh: !loadMore, page: page, perPage: 100);
 
       setState(() {
         if (loadMore) {
@@ -75,8 +78,8 @@ class _HomePageState extends State<HomePage> {
         _isLoading = false;
         _isLoadingMore = false;
 
-        // Check if we have more pages (if we got less than perPage, no more pages)
-        _hasMorePages = data.length == _perPage;
+        // Check if we have more pages
+        _hasMorePages = data.length == 100;
       });
     } catch (error) {
       setState(() {

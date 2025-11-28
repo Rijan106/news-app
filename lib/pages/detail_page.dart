@@ -9,8 +9,11 @@ import 'package:http/http.dart' as http;
 import 'package:pdfx/pdfx.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:html_unescape/html_unescape.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../services/bookmarks_service.dart';
 import '../services/reading_history_service.dart';
+import 'pdf_viewer_page.dart';
+import 'image_viewer_page.dart';
 
 class DetailPage extends StatefulWidget {
   final dynamic post;
@@ -31,6 +34,10 @@ class _DetailPageState extends State<DetailPage> {
   PdfControllerPinch? _pdfController;
   bool _isPdfLoading = false;
 
+  // YouTube player state
+  List<YoutubePlayerController> _youtubeControllers = [];
+  List<String> _youtubeVideoIds = [];
+
   @override
   void initState() {
     super.initState();
@@ -48,12 +55,18 @@ class _DetailPageState extends State<DetailPage> {
       if (pdfUrls.isNotEmpty) {
         _loadPdfController(pdfUrls[0]);
       }
+
+      // Extract and initialize YouTube videos
+      _extractYouTubeVideos(decodedContent);
     });
   }
 
   @override
   void dispose() {
     _pdfController?.dispose();
+    for (var controller in _youtubeControllers) {
+      controller.dispose();
+    }
     _scrollController.dispose();
     _commentController.dispose();
     super.dispose();
@@ -201,6 +214,43 @@ class _DetailPageState extends State<DetailPage> {
     final uniqueUrls = pdfUrls.toSet().toList();
     print('Final unique PDF URLs: $uniqueUrls');
     return uniqueUrls;
+  }
+
+  void _extractYouTubeVideos(String htmlContent) {
+    // Extract YouTube video IDs from various formats
+    final youtubePatterns = [
+      RegExp(r'youtube\.com/watch\?v=([a-zA-Z0-9_-]+)'),
+      RegExp(r'youtu\.be/([a-zA-Z0-9_-]+)'),
+      RegExp(r'youtube\.com/embed/([a-zA-Z0-9_-]+)'),
+    ];
+
+    final videoIds = <String>{};
+    for (final pattern in youtubePatterns) {
+      final matches = pattern.allMatches(htmlContent);
+      for (final match in matches) {
+        final videoId = match.group(1);
+        if (videoId != null) {
+          videoIds.add(videoId);
+        }
+      }
+    }
+
+    if (videoIds.isNotEmpty) {
+      setState(() {
+        _youtubeVideoIds = videoIds.toList();
+        _youtubeControllers = _youtubeVideoIds.map((videoId) {
+          return YoutubePlayerController(
+            initialVideoId: videoId,
+            flags: const YoutubePlayerFlags(
+              autoPlay: false,
+              mute: false,
+              enableCaption: true,
+              controlsVisibleAtStart: true,
+            ),
+          );
+        }).toList();
+      });
+    }
   }
 
   Future<void> _openPdf(String pdfUrl) async {
@@ -353,7 +403,21 @@ class _DetailPageState extends State<DetailPage> {
     print('Raw HTML Content length: ${rawHtmlContent.length}');
 
     final unescape = HtmlUnescape();
-    final htmlContent = unescape.convert(rawHtmlContent);
+    var htmlContent = unescape.convert(rawHtmlContent);
+
+    // Remove YouTube links from HTML to prevent showing href code
+    // This removes the text links while keeping the embedded videos
+    htmlContent = htmlContent.replaceAll(
+        RegExp(
+            r'<a[^>]*href="[^"]*(?:youtube\.com|youtu\.be)[^"]*"[^>]*>.*?</a>',
+            caseSensitive: false),
+        '');
+
+    // Also remove plain YouTube URLs that might appear as text
+    htmlContent = htmlContent.replaceAll(
+        RegExp(r'https?://(?:www\.)?(?:youtube\.com|youtu\.be)/[^\s<]+',
+            caseSensitive: false),
+        '');
 
     // Debug: Print decoded content
     print('Decoded HTML Content: $htmlContent');
@@ -371,7 +435,7 @@ class _DetailPageState extends State<DetailPage> {
     print('Should show PDF viewer: ${pdfUrls.isNotEmpty}');
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           widget.post['title']?['rendered'] ?? 'No Title',
@@ -423,6 +487,8 @@ class _DetailPageState extends State<DetailPage> {
                         child: CachedNetworkImage(
                           imageUrl: imageUrl,
                           fit: BoxFit.cover,
+                          memCacheHeight: 500,
+                          memCacheWidth: 1000,
                           placeholder: (context, url) => Container(
                             color: Colors.grey.shade200,
                             child: const Center(
@@ -506,23 +572,31 @@ class _DetailPageState extends State<DetailPage> {
                             "body": Style(
                               fontSize: FontSize(16),
                               lineHeight: LineHeight(1.6),
-                              color: Colors.black87,
+                              color:
+                                  Theme.of(context).textTheme.bodyLarge?.color,
                             ),
                             "h1": Style(
                               fontSize: FontSize(24),
                               fontWeight: FontWeight.bold,
                               margin: Margins.only(bottom: 16),
-                              color: Colors.black87,
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .headlineLarge
+                                  ?.color,
                             ),
                             "h2": Style(
                               fontSize: FontSize(20),
                               fontWeight: FontWeight.bold,
                               margin: Margins.only(bottom: 12),
-                              color: Colors.black87,
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .headlineMedium
+                                  ?.color,
                             ),
                             "p": Style(
                               margin: Margins.only(bottom: 12),
-                              color: Colors.black87,
+                              color:
+                                  Theme.of(context).textTheme.bodyMedium?.color,
                             ),
                             "img": Style(
                               margin: Margins.only(bottom: 12),
@@ -532,6 +606,59 @@ class _DetailPageState extends State<DetailPage> {
                               alignment: Alignment.center,
                             ),
                           },
+                          extensions: [
+                            TagExtension(
+                              tagsToExtend: {"img"},
+                              builder: (extensionContext) {
+                                final src = extensionContext.attributes['src'];
+                                if (src == null || src.isEmpty) {
+                                  return const SizedBox.shrink();
+                                }
+
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ImageViewerPage(
+                                          imageUrls: [src],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    margin:
+                                        const EdgeInsets.symmetric(vertical: 8),
+                                    child: CachedNetworkImage(
+                                      imageUrl: src,
+                                      fit: BoxFit.cover,
+                                      memCacheHeight: 400,
+                                      memCacheWidth: 800,
+                                      placeholder: (context, url) => Container(
+                                        height: 200,
+                                        color: Colors.grey.shade200,
+                                        child: const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) =>
+                                          Container(
+                                        height: 200,
+                                        color: Colors.grey.shade200,
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.broken_image,
+                                            size: 50,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                           onLinkTap: (url, attributes, element) {
                             if (url == null) return;
 
@@ -598,47 +725,105 @@ class _DetailPageState extends State<DetailPage> {
                           ),
                           const SizedBox(height: 12),
                           Expanded(
-                            child: _isPdfLoading
-                                ? const Center(
-                                    child: CircularProgressIndicator(),
-                                  )
-                                : _pdfController != null
-                                    ? PdfViewPinch(
-                                        controller: _pdfController!,
-                                      )
-                                    : Center(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.error,
-                                                color: Colors.red, size: 48),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              'Failed to load PDF',
-                                              style:
-                                                  TextStyle(color: Colors.red),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            OutlinedButton.icon(
-                                              onPressed: () =>
-                                                  _openPdf(pdfUrls[0]),
-                                              icon: Icon(Icons.open_in_new,
-                                                  size: 18),
-                                              label: const Text('Open in App'),
-                                              style: OutlinedButton.styleFrom(
-                                                foregroundColor: Colors.red,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PdfViewerPage(
+                                      pdfUrl: pdfUrls[0],
+                                      title: 'PDF Document',
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: _isPdfLoading
+                                  ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  : _pdfController != null
+                                      ? PdfViewPinch(
+                                          controller: _pdfController!,
+                                        )
+                                      : Center(
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(Icons.error,
+                                                  color: Colors.red, size: 48),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                'Failed to load PDF',
+                                                style: TextStyle(
+                                                    color: Colors.red),
                                               ),
-                                            ),
-                                          ],
+                                              const SizedBox(height: 8),
+                                              OutlinedButton.icon(
+                                                onPressed: () =>
+                                                    _openPdf(pdfUrls[0]),
+                                                icon: Icon(Icons.open_in_new,
+                                                    size: 18),
+                                                label:
+                                                    const Text('Open in App'),
+                                                style: OutlinedButton.styleFrom(
+                                                  foregroundColor: Colors.red,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ],
                   const SizedBox(height: 24),
+
+                  // YouTube Videos Section
+                  if (_youtubeControllers.isNotEmpty)
+                    ..._youtubeControllers.asMap().entries.map((entry) {
+                      final controller = entry.value;
+                      return Column(
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: YoutubePlayerBuilder(
+                              player: YoutubePlayer(
+                                controller: controller,
+                                showVideoProgressIndicator: true,
+                                progressIndicatorColor: const Color(0xFF59151E),
+                                progressColors: const ProgressBarColors(
+                                  playedColor: Color(0xFF59151E),
+                                  handleColor: Color(0xFF59151E),
+                                ),
+                              ),
+                              builder: (context, player) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: player,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      );
+                    }),
+
                   // Comments Section
                   Container(
                     padding: const EdgeInsets.all(16),

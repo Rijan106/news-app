@@ -82,17 +82,17 @@ class _MainLayoutState extends State<MainLayout> {
           _pageTitles[_selectedIndex],
           style: const TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color(0xFF59151E),
+        backgroundColor: Theme.of(context).primaryColor,
       ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
+            DrawerHeader(
               decoration: BoxDecoration(
-                color: Color(0xFF59151E),
+                color: Theme.of(context).primaryColor,
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [

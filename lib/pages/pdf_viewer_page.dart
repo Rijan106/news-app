@@ -1,301 +1,280 @@
 import 'package:flutter/material.dart';
-import 'package:pdfx/pdfx.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:io' show Platform, File;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:http/http.dart' as http;
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 class PdfViewerPage extends StatefulWidget {
   final String pdfUrl;
-  final String? title;
+  final String title;
 
-  const PdfViewerPage({
-    super.key,
-    required this.pdfUrl,
-    this.title,
-  });
+  const PdfViewerPage({super.key, required this.pdfUrl, required this.title});
 
   @override
   State<PdfViewerPage> createState() => _PdfViewerPageState();
 }
 
 class _PdfViewerPageState extends State<PdfViewerPage> {
-  late PdfControllerPinch _pdfController;
   bool _isLoading = true;
-  bool _hasError = false;
-  String _errorMessage = '';
-  int _totalPages = 0;
-  int _currentPage = 1;
+  String? _errorMessage;
+  String? _currentViewId;
+  String? _pdfPath;
 
   @override
   void initState() {
     super.initState();
-    _loadPdf();
+    _initializePdfViewer();
   }
 
-  @override
-  void dispose() {
-    _pdfController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadPdf() async {
+  void _initializePdfViewer() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _hasError = false;
-      });
+      // Handle encoded URLs (like those with pdfID parameter)
+      String actualPdfUrl = widget.pdfUrl;
+      if (widget.pdfUrl.contains('pdfID=') && widget.pdfUrl.contains('url=')) {
+        final uri = Uri.parse(widget.pdfUrl);
+        final urlParam = uri.queryParameters['url'];
+        if (urlParam != null) {
+          actualPdfUrl = Uri.decodeComponent(urlParam);
+        }
+      }
 
-      print('Loading PDF from URL: ${widget.pdfUrl}');
-
-      // Fetch PDF data from URL
-      final response = await http.get(Uri.parse(widget.pdfUrl));
-
+      // Download the PDF to local storage for in-app viewing
+      final response = await http.get(Uri.parse(actualPdfUrl));
       if (response.statusCode == 200) {
-        // Create PDF controller from bytes
-        _pdfController = PdfControllerPinch(
-          document: PdfDocument.openData(response.bodyBytes),
-        );
-
-        // Get total pages
-        _totalPages = await _pdfController.pagesCount ?? 0;
+        final dir = await getTemporaryDirectory();
+        final fileName = path.basename(Uri.parse(actualPdfUrl).path);
+        final file = File('${dir.path}/$fileName');
+        await file.writeAsBytes(response.bodyBytes);
 
         setState(() {
+          _pdfPath = file.path;
           _isLoading = false;
         });
       } else {
-        throw Exception('Failed to load PDF: ${response.statusCode}');
+        throw Exception('Failed to download PDF: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error loading PDF: $e');
       setState(() {
+        _errorMessage = 'Failed to load PDF: $e';
         _isLoading = false;
-        _hasError = true;
-        _errorMessage = e.toString();
       });
     }
-  }
-
-  void _goToPreviousPage() {
-    if (_currentPage > 1) {
-      _pdfController.previousPage(
-        curve: Curves.easeInOut,
-        duration: const Duration(milliseconds: 300),
-      );
-    }
-  }
-
-  void _goToNextPage() {
-    if (_currentPage < _totalPages) {
-      _pdfController.nextPage(
-        curve: Curves.easeInOut,
-        duration: const Duration(milliseconds: 300),
-      );
-    }
-  }
-
-  void _goToPage(int page) {
-    _pdfController.jumpToPage(page);
   }
 
   @override
   Widget build(BuildContext context) {
-    final fileName = widget.pdfUrl.split('/').last.split('?').first;
-    final displayTitle = widget.title ?? fileName;
-
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'PDF Viewer',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.title,
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
             ),
-            Text(
-              displayTitle.length > 30
-                  ? '${displayTitle.substring(0, 27)}...'
-                  : displayTitle,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.8),
-              ),
+          ),
+          backgroundColor: const Color(0xFF59151E),
+          elevation: 0,
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.title,
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: const Color(0xFF59151E),
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.open_in_browser, color: Colors.white),
+              onPressed: () async {
+                // Handle encoded URLs (like those with pdfID parameter)
+                String actualPdfUrl = widget.pdfUrl;
+                if (widget.pdfUrl.contains('pdfID=') &&
+                    widget.pdfUrl.contains('url=')) {
+                  final uri = Uri.parse(widget.pdfUrl);
+                  final urlParam = uri.queryParameters['url'];
+                  if (urlParam != null) {
+                    actualPdfUrl = Uri.decodeComponent(urlParam);
+                  }
+                }
+
+                // Open PDF in external browser
+                final Uri url = Uri.parse(actualPdfUrl);
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Could not open PDF')),
+                    );
+                  }
+                }
+              },
+              tooltip: 'Open in browser',
             ),
           ],
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.red,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error Loading PDF',
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.7),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.open_in_browser),
+                  label: const Text('Open in Browser'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF59151E),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                  ),
+                  onPressed: () async {
+                    // Handle encoded URLs (like those with pdfID parameter)
+                    String actualPdfUrl = widget.pdfUrl;
+                    if (widget.pdfUrl.contains('pdfID=') &&
+                        widget.pdfUrl.contains('url=')) {
+                      final uri = Uri.parse(widget.pdfUrl);
+                      final urlParam = uri.queryParameters['url'];
+                      if (urlParam != null) {
+                        actualPdfUrl = Uri.decodeComponent(urlParam);
+                      }
+                    }
+
+                    // Open PDF in external browser
+                    final Uri url = Uri.parse(actualPdfUrl);
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url,
+                          mode: LaunchMode.externalApplication);
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Could not open PDF')),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          widget.title,
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
         backgroundColor: const Color(0xFF59151E),
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(
-              Icons.refresh,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            onPressed: _loadPdf,
-            tooltip: 'Reload PDF',
+            icon: const Icon(Icons.open_in_browser, color: Colors.white),
+            onPressed: () async {
+              // Handle encoded URLs (like those with pdfID parameter)
+              String actualPdfUrl = widget.pdfUrl;
+              if (widget.pdfUrl.contains('pdfID=') &&
+                  widget.pdfUrl.contains('url=')) {
+                final uri = Uri.parse(widget.pdfUrl);
+                final urlParam = uri.queryParameters['url'];
+                if (urlParam != null) {
+                  actualPdfUrl = Uri.decodeComponent(urlParam);
+                }
+              }
+
+              // Open PDF in external browser
+              final Uri url = Uri.parse(actualPdfUrl);
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Could not open PDF')),
+                  );
+                }
+              }
+            },
+            tooltip: 'Open in browser',
           ),
         ],
       ),
-      body: _isLoading
-          ? _buildLoadingView()
-          : _hasError
-              ? _buildErrorView()
-              : _buildPdfView(),
-      bottomNavigationBar: _totalPages > 0 ? _buildBottomNavigationBar() : null,
-    );
-  }
-
-  Widget _buildLoadingView() {
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
-      child: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(
-              color: Color(0xFF59151E),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Loading PDF...',
-              style: TextStyle(
-                color: Color(0xFF59151E),
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorView() {
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Failed to load PDF',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.error,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                _errorMessage,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _loadPdf,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF59151E),
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPdfView() {
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
-      child: PdfViewPinch(
-        controller: _pdfController,
-        onDocumentLoaded: (document) {
-          print('PDF loaded with ${document.pagesCount} pages');
-        },
-        onPageChanged: (page) {
+      body: PDFView(
+        filePath: _pdfPath,
+        enableSwipe: true,
+        swipeHorizontal: false,
+        autoSpacing: true,
+        pageFling: true,
+        pageSnap: true,
+        fitPolicy: FitPolicy.WIDTH,
+        onRender: (_pages) {
           setState(() {
-            _currentPage = page;
+            _isLoading = false;
           });
         },
-        scrollDirection: Axis.vertical,
-        backgroundDecoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Previous page button
-          IconButton(
-            onPressed: _currentPage > 1 ? _goToPreviousPage : null,
-            icon: Icon(
-              Icons.navigate_before,
-              color: _currentPage > 1
-                  ? const Color(0xFF59151E)
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-            ),
-            tooltip: 'Previous page',
-          ),
-
-          // Page indicator
-          Expanded(
-            child: Center(
-              child: Text(
-                '$_currentPage / $_totalPages',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-            ),
-          ),
-
-          // Next page button
-          IconButton(
-            onPressed: _currentPage < _totalPages ? _goToNextPage : null,
-            icon: Icon(
-              Icons.navigate_next,
-              color: _currentPage < _totalPages
-                  ? const Color(0xFF59151E)
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-            ),
-            tooltip: 'Next page',
-          ),
-        ],
+        onError: (error) {
+          setState(() {
+            _errorMessage = error.toString();
+          });
+        },
+        onPageError: (page, error) {
+          setState(() {
+            _errorMessage = 'Error on page $page: $error';
+          });
+        },
+        onViewCreated: (PDFViewController pdfViewController) {
+          // You can use the controller to control the PDF view
+        },
       ),
     );
   }

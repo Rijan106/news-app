@@ -29,7 +29,6 @@ class _NewsListPageState extends State<NewsListPage> {
   Set<int> _bookmarkedIds = {};
   bool _showAdvancedFilters = false;
   final TextEditingController _searchController = TextEditingController();
-  final int _perPage = 10;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -37,6 +36,9 @@ class _NewsListPageState extends State<NewsListPage> {
     super.initState();
     _fetchPosts();
     _scrollController.addListener(_onScroll);
+    // Initialize controller with current query
+    final searchProvider = Provider.of<SearchProvider>(context, listen: false);
+    _searchController.text = searchProvider.searchQuery;
   }
 
   @override
@@ -47,6 +49,13 @@ class _NewsListPageState extends State<NewsListPage> {
   }
 
   void _onScroll() {
+    // Don't load more if user is searching or has active filters
+    final searchProvider = Provider.of<SearchProvider>(context, listen: false);
+    if (searchProvider.searchQuery.isNotEmpty ||
+        searchProvider.hasActiveFilters) {
+      return;
+    }
+
     if (_scrollController.position.pixels ==
         _scrollController.position.maxScrollExtent) {
       _loadMore();
@@ -68,8 +77,7 @@ class _NewsListPageState extends State<NewsListPage> {
 
     final page = loadMore ? _currentPage + 1 : 1;
     _newsService
-        .fetchPosts(
-            categoryId: widget.categoryId, page: page, perPage: _perPage)
+        .fetchPosts(categoryId: widget.categoryId, page: page, perPage: 100)
         .then((data) {
       if (mounted) {
         setState(() {
@@ -82,7 +90,7 @@ class _NewsListPageState extends State<NewsListPage> {
           _filteredPosts = List.from(_allPosts);
           _isLoading = false;
           _isLoadingMore = false;
-          _hasMorePages = data.length == _perPage;
+          _hasMorePages = data.length == 100;
         });
       }
     }).catchError((error) {
@@ -136,6 +144,7 @@ class _NewsListPageState extends State<NewsListPage> {
     if (searchProvider.searchQuery.isEmpty &&
         !searchProvider.hasActiveFilters) {
       searchProvider.clearFilters();
+      _searchController.clear();
     }
 
     _fetchPosts();
@@ -511,15 +520,17 @@ class _NewsListPageState extends State<NewsListPage> {
                 children: [
                   // Search Field
                   TextField(
-                    controller:
-                        TextEditingController(text: searchProvider.searchQuery),
+                    controller: _searchController,
                     decoration: InputDecoration(
                       labelText: 'Search articles...',
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: searchProvider.searchQuery.isNotEmpty
                           ? IconButton(
                               icon: const Icon(Icons.clear),
-                              onPressed: () => _searchPosts(''),
+                              onPressed: () {
+                                _searchController.clear();
+                                _searchPosts('');
+                              },
                             )
                           : null,
                       border: OutlineInputBorder(
@@ -554,6 +565,7 @@ class _NewsListPageState extends State<NewsListPage> {
                         TextButton(
                           onPressed: () {
                             searchProvider.clearFilters();
+                            _searchController.clear();
                             _applyFilters();
                           },
                           child: const Text('Clear All'),

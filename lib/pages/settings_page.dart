@@ -76,26 +76,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
                 const SizedBox(height: 12),
 
-                // Font Size Slider
-                _buildSettingCard(
-                  title: 'Font Size',
-                  subtitle: 'Adjust text size for better readability',
-                  trailing: SizedBox(
-                    width: 120,
-                    child: Slider(
-                      value: themeProvider.fontSize,
-                      min: 12.0,
-                      max: 24.0,
-                      divisions: 6,
-                      label: '${themeProvider.fontSize.round()}',
-                      onChanged: (value) => themeProvider.setFontSize(value),
-                      activeColor: Theme.of(context).primaryColor,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
                 // Auto Dark Mode
                 _buildSettingCard(
                   title: 'Auto Dark Mode',
@@ -117,15 +97,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildSettingCard(
                   title: 'Reading History',
                   subtitle: 'View and manage your reading history',
-                  trailing: IconButton(
-                    icon: Icon(
-                      Icons.history,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/recently-viewed');
-                    },
+                  trailing: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Theme.of(context).primaryColor,
                   ),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/recently-viewed');
+                  },
                 ),
 
                 const SizedBox(height: 12),
@@ -134,15 +113,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildSettingCard(
                   title: 'Bookmarks',
                   subtitle: 'Manage your saved articles',
-                  trailing: IconButton(
-                    icon: Icon(
-                      Icons.bookmark_border,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/bookmarks');
-                    },
+                  trailing: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Theme.of(context).primaryColor,
                   ),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/bookmarks');
+                  },
                 ),
 
                 const SizedBox(height: 32),

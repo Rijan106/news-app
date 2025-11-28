@@ -1,14 +1,4 @@
-# TODO: Fix Images and YouTube Video Handling
-
-## Tasks to Complete:
-
-- [ ] Enhance flutter_html configuration in both detail pages to handle images with CachedNetworkImage
-- [ ] Add YouTube video iframe detection and custom rendering
-- [ ] Test image loading and caching functionality
-- [ ] Test YouTube video embedding
-- [ ] Ensure responsive design for different screen sizes
-
-## Progress Tracking:
-
-- Started: $(date)
-- Last Updated: $(date)
+- [ ] Remove YouTube iframe and link elements from HTML content before rendering
+- [ ] Store WebViewControllers in state to prevent recreation on refresh
+- [ ] Update \_buildYouTubeViewer to use persistent controllers
+- [ ] Test the changes to ensure text is removed and videos don't reload
