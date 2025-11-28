@@ -5,6 +5,6 @@ class BannerAdWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox.shrink();
+    return const SizedBox.shrink(); // Returns nothing - no ads
   }
 }

@@ -64,13 +64,13 @@ class _RecentlyViewedPageState extends State<RecentlyViewedPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         title: Text(
           'Recently Viewed',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onPrimary,
           ),
         ),
         backgroundColor: const Color(0xFF59151E),
@@ -78,7 +78,8 @@ class _RecentlyViewedPageState extends State<RecentlyViewedPage> {
         actions: [
           if (_recentlyViewedArticles.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.clear_all, color: Colors.white),
+              icon: Icon(Icons.clear_all,
+                  color: Theme.of(context).colorScheme.onPrimary),
               onPressed: () {
                 showDialog(
                   context: context,
@@ -120,14 +121,20 @@ class _RecentlyViewedPageState extends State<RecentlyViewedPage> {
                       Icon(
                         Icons.history,
                         size: 64,
-                        color: Colors.grey.shade400,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.6),
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'No recently viewed articles',
                         style: GoogleFonts.poppins(
                           fontSize: 18,
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.7),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -135,7 +142,10 @@ class _RecentlyViewedPageState extends State<RecentlyViewedPage> {
                         'Articles you read will appear here',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
-                          color: Colors.grey.shade500,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.5),
                         ),
                       ),
                     ],

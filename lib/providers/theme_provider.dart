@@ -142,69 +142,127 @@ class ThemeProvider extends ChangeNotifier {
   ThemeData _getDarkTheme() {
     Color primaryColor;
     Color accentColor;
+    Color surfaceColor;
+    Color backgroundColor;
 
     switch (_selectedTheme) {
       case 'blue':
-        primaryColor = const Color(0xFF1976D2);
-        accentColor = const Color(0xFF42A5F5);
+        primaryColor = const Color(0xFF2196F3);
+        accentColor = const Color(0xFF64B5F6);
+        surfaceColor = const Color(0xFF1E1E2E);
+        backgroundColor = const Color(0xFF0F0F23);
         break;
       case 'green':
-        primaryColor = const Color(0xFF388E3C);
-        accentColor = const Color(0xFF66BB6A);
+        primaryColor = const Color(0xFF4CAF50);
+        accentColor = const Color(0xFF81C784);
+        surfaceColor = const Color(0xFF1E2E1E);
+        backgroundColor = const Color(0xFF0F230F);
         break;
       case 'purple':
-        primaryColor = const Color(0xFF7B1FA2);
+        primaryColor = const Color(0xFF9C27B0);
         accentColor = const Color(0xFFBA68C8);
+        surfaceColor = const Color(0xFF2E1E2E);
+        backgroundColor = const Color(0xFF230F23);
         break;
       default:
-        primaryColor = const Color(0xFF59151e);
-        accentColor = const Color(0xFF8B2635);
+        primaryColor = const Color(0xFFFF6B6B);
+        accentColor = const Color(0xFFFF8E8E);
+        surfaceColor = const Color(0xFF2A1A1A);
+        backgroundColor = const Color(0xFF1A0F0F);
     }
 
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       primaryColor: primaryColor,
-      scaffoldBackgroundColor: const Color(0xFF121212),
+      scaffoldBackgroundColor: backgroundColor,
       appBarTheme: AppBarTheme(
-        backgroundColor: primaryColor,
+        backgroundColor: surfaceColor,
         foregroundColor: Colors.white,
-        elevation: 2,
+        elevation: 0,
+        shadowColor: Colors.black.withOpacity(0.5),
       ),
-      cardColor: const Color(0xFF1E1E1E),
+      cardColor: surfaceColor,
       cardTheme: CardThemeData(
-        elevation: 2,
+        elevation: 4,
+        shadowColor: Colors.black.withOpacity(0.3),
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
+          elevation: 3,
+          shadowColor: primaryColor.withOpacity(0.3),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: surfaceColor.withOpacity(0.8),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade600),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade600),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: primaryColor, width: 2),
         ),
       ),
       textTheme: TextTheme(
-        bodyLarge: TextStyle(color: Colors.white, fontSize: _fontSize),
-        bodyMedium: TextStyle(color: Colors.white70, fontSize: _fontSize - 2),
+        bodyLarge: TextStyle(
+          color: Colors.white.withOpacity(0.9),
+          fontSize: _fontSize,
+          height: 1.5,
+        ),
+        bodyMedium: TextStyle(
+          color: Colors.white.withOpacity(0.7),
+          fontSize: _fontSize - 2,
+          height: 1.4,
+        ),
         titleMedium: TextStyle(
-            color: Colors.white,
-            fontSize: _fontSize + 2,
-            fontWeight: FontWeight.w500),
+          color: Colors.white.withOpacity(0.95),
+          fontSize: _fontSize + 2,
+          fontWeight: FontWeight.w600,
+          height: 1.3,
+        ),
         titleLarge: TextStyle(
-            color: Colors.white,
-            fontSize: _fontSize + 4,
-            fontWeight: FontWeight.bold),
+          color: Colors.white,
+          fontSize: _fontSize + 4,
+          fontWeight: FontWeight.bold,
+          height: 1.2,
+        ),
+        headlineSmall: TextStyle(
+          color: Colors.white,
+          fontSize: _fontSize + 6,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       colorScheme: ColorScheme.dark(
         primary: primaryColor,
         secondary: accentColor,
-        surface: const Color(0xFF1E1E1E),
-        background: const Color(0xFF121212),
+        surface: surfaceColor,
+        background: backgroundColor,
+        onSurface: Colors.white.withOpacity(0.9),
+        onBackground: Colors.white.withOpacity(0.9),
+      ),
+      dividerColor: Colors.white.withOpacity(0.1),
+      iconTheme: IconThemeData(
+        color: Colors.white.withOpacity(0.8),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: surfaceColor,
+        selectedItemColor: primaryColor,
+        unselectedItemColor: Colors.white.withOpacity(0.6),
       ),
     );
   }

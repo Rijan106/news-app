@@ -210,73 +210,59 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
-        return Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: AppBar(
-            title: Text(
-              'Latest News',
-              style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600, color: Colors.white),
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                decoration: const InputDecoration(
+                  labelText: 'Search Latest News',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: _searchNews,
+              ),
             ),
-            centerTitle: true,
-            elevation: 0,
-            backgroundColor: Theme.of(context).primaryColor,
-          ),
-          body: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Search Latest News',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: _searchNews,
-                ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: DropdownButton<String>(
+                value: _sortOrder,
+                items: const [
+                  DropdownMenuItem(value: 'Newest', child: Text('Newest')),
+                  DropdownMenuItem(value: 'Oldest', child: Text('Oldest')),
+                ],
+                onChanged: (value) {
+                  if (value != null) _sortNews(value);
+                },
+                isExpanded: true,
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: DropdownButton<String>(
-                  value: _sortOrder,
-                  items: const [
-                    DropdownMenuItem(value: 'Newest', child: Text('Newest')),
-                    DropdownMenuItem(value: 'Oldest', child: Text('Oldest')),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) _sortNews(value);
-                  },
-                  isExpanded: true,
-                ),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _refresh,
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _filteredNews.isEmpty
+                        ? const Center(child: Text("No latest news available"))
+                        : ListView.builder(
+                            controller: _scrollController,
+                            itemCount:
+                                _filteredNews.length + (_isLoadingMore ? 1 : 0),
+                            itemBuilder: (context, index) {
+                              if (index == _filteredNews.length) {
+                                return const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                );
+                              }
+                              return _buildListItem(_filteredNews[index]);
+                            },
+                          ),
               ),
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: _refresh,
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _filteredNews.isEmpty
-                          ? const Center(
-                              child: Text("No latest news available"))
-                          : ListView.builder(
-                              controller: _scrollController,
-                              itemCount: _filteredNews.length +
-                                  (_isLoadingMore ? 1 : 0),
-                              itemBuilder: (context, index) {
-                                if (index == _filteredNews.length) {
-                                  return const Center(
-                                    child: Padding(
-                                      padding: EdgeInsets.all(16.0),
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  );
-                                }
-                                return _buildListItem(_filteredNews[index]);
-                              },
-                            ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );

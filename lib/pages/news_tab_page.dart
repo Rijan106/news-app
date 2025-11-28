@@ -156,115 +156,104 @@ class _NewsTabPageState extends State<NewsTabPage>
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
-        if (_isLoading) {
-          return Scaffold(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            appBar: AppBar(
-              title: Text(
-                'News Categories',
-                style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600, color: Colors.white),
-              ),
-              backgroundColor: Theme.of(context).primaryColor,
-            ),
-            body: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Loading categories...'),
-                ],
-              ),
-            ),
-          );
-        }
-
-        if (_errorMessage != null) {
-          return Scaffold(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            appBar: AppBar(
-              title: Text(
-                'News Categories',
-                style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600, color: Colors.white),
-              ),
-              backgroundColor: Theme.of(context).primaryColor,
-            ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(_errorMessage!),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _loadCategories,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                    child: const Text('Retry'),
+        return Container(
+          color: Theme.of(context).colorScheme.background,
+          child: _isLoading
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Loading categories...',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onBackground,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        if (_categories.isEmpty) {
-          return Scaffold(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            appBar: AppBar(
-              title: Text(
-                'News Categories',
-                style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600, color: Colors.white),
-              ),
-              backgroundColor: Theme.of(context).primaryColor,
-            ),
-            body: const Center(
-              child: Text('No categories available'),
-            ),
-          );
-        }
-
-        return Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: AppBar(
-            title: Text(
-              'News Categories',
-              style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600, color: Colors.white),
-            ),
-            backgroundColor: Theme.of(context).primaryColor,
-            elevation: 0,
-            bottom: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white70,
-              indicatorColor: Colors.white,
-              tabs: _categories.map<Widget>((category) {
-                return Tab(
-                  child: Text(
-                    category['name'],
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          body: TabBarView(
-            controller: _tabController,
-            children: _categories.map<Widget>((category) {
-              return _buildCategoryTab(category);
-            }).toList(),
-          ),
+                )
+              : _errorMessage != null
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _errorMessage!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onBackground,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _loadCategories,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.onPrimary,
+                            ),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : _categories.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No categories available',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onBackground,
+                            ),
+                          ),
+                        )
+                      : Column(
+                          children: [
+                            Container(
+                              color: Theme.of(context).colorScheme.surface,
+                              child: TabBar(
+                                controller: _tabController,
+                                isScrollable: true,
+                                labelColor:
+                                    Theme.of(context).colorScheme.primary,
+                                unselectedLabelColor: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.6),
+                                indicatorColor:
+                                    Theme.of(context).colorScheme.primary,
+                                tabs: _categories.map<Widget>((category) {
+                                  return Tab(
+                                    child: Text(
+                                      category['name'],
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                            Expanded(
+                              child: TabBarView(
+                                controller: _tabController,
+                                children: _categories.map<Widget>((category) {
+                                  return _buildCategoryTab(category);
+                                }).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
         );
       },
     );

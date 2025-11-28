@@ -316,7 +316,7 @@ class _NewsListPageState extends State<NewsListPage> {
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         elevation: 2,
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         child: InkWell(
           onTap: () {
@@ -341,7 +341,7 @@ class _NewsListPageState extends State<NewsListPage> {
                             imageUrl: imageUrl,
                             fit: BoxFit.cover,
                             placeholder: (context, url) => Container(
-                              color: Colors.grey[200],
+                              color: Theme.of(context).colorScheme.surface,
                               child: const Center(
                                 child: SizedBox(
                                   width: 20,
@@ -352,21 +352,27 @@ class _NewsListPageState extends State<NewsListPage> {
                               ),
                             ),
                             errorWidget: (context, url, error) => Container(
-                              color: Colors.grey[200],
+                              color: Theme.of(context).colorScheme.surface,
                               child: Icon(
                                 Icons.broken_image,
                                 size: 30,
-                                color: Colors.grey[400],
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.5),
                               ),
                             ),
                           ),
                         )
                       : Container(
-                          color: Colors.grey[200],
+                          color: Theme.of(context).colorScheme.surface,
                           child: Icon(
                             Icons.article,
                             size: 30,
-                            color: Colors.grey[400],
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.5),
                           ),
                         ),
                 ),
@@ -386,7 +392,7 @@ class _NewsListPageState extends State<NewsListPage> {
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: Colors.black,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
 
@@ -396,7 +402,10 @@ class _NewsListPageState extends State<NewsListPage> {
                       Text(
                         date,
                         style: TextStyle(
-                          color: Colors.black54,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -406,7 +415,10 @@ class _NewsListPageState extends State<NewsListPage> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Colors.black87,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.8),
                           fontSize: 13,
                         ),
                       ),
@@ -423,7 +435,12 @@ class _NewsListPageState extends State<NewsListPage> {
                     IconButton(
                       icon: Icon(
                         isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                        color: isBookmarked ? Colors.blue : Colors.grey,
+                        color: isBookmarked
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.5),
                       ),
                       onPressed: () => _toggleBookmark(post),
                       tooltip:
@@ -433,8 +450,9 @@ class _NewsListPageState extends State<NewsListPage> {
                     // Read More Button
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         textStyle: GoogleFonts.poppins(fontSize: 12),
@@ -655,13 +673,21 @@ class _NewsListPageState extends State<NewsListPage> {
               child: RefreshIndicator(
                 onRefresh: _refresh,
                 child: _isLoading
-                    ? const Center(
+                    ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 16),
-                            Text('Loading news...'),
+                            CircularProgressIndicator(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Loading news...',
+                              style: TextStyle(
+                                color:
+                                    Theme.of(context).colorScheme.onBackground,
+                              ),
+                            ),
                           ],
                         ),
                       )
@@ -670,16 +696,26 @@ class _NewsListPageState extends State<NewsListPage> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.article_outlined,
-                                    size: 48, color: Colors.grey),
+                                Icon(
+                                  Icons.article_outlined,
+                                  size: 48,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.5),
+                                ),
                                 const SizedBox(height: 16),
                                 Text(
                                   searchProvider.searchQuery.isEmpty &&
                                           !searchProvider.hasActiveFilters
                                       ? 'No news available'
                                       : 'No articles match your filters',
-                                  style:
-                                      GoogleFonts.poppins(color: Colors.grey),
+                                  style: GoogleFonts.poppins(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.7),
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
