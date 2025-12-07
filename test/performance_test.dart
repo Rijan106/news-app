@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gurubaa_news/main.dart';
+import 'package:Gurubaa_News/main.dart';
 
 void main() {
   testWidgets('Performance test - App startup time',

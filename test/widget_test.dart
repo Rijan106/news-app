@@ -7,7 +7,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:gurubaa_news/main.dart';
+import 'package:Gurubaa_News/main.dart';
 
 void main() {
   testWidgets('App builds without error', (WidgetTester tester) async {

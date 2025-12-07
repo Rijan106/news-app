@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:gurubaa_news/pages/home_page.dart';
-import 'package:gurubaa_news/providers/theme_provider.dart';
-import 'package:gurubaa_news/providers/search_provider.dart';
+import 'package:Gurubaa_News/pages/home_page.dart';
+import 'package:Gurubaa_News/providers/theme_provider.dart';
+import 'package:Gurubaa_News/providers/search_provider.dart';
 
 void main() {
   testWidgets('HomePage displays correctly', (WidgetTester tester) async {

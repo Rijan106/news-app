@@ -121,4 +121,8 @@ class NewsService {
   Future<void> clearCache() async {
     await _cacheService.clearCache();
   }
+
+  void dispose() {
+    _client.close();
+  }
 }

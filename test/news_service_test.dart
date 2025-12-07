@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:gurubaa_news/services/news_service.dart';
+import 'package:Gurubaa_News/services/news_service.dart';
 
 // Generate mocks
 @GenerateMocks([http.Client])

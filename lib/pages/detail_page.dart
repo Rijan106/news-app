@@ -9,9 +9,9 @@ import 'package:http/http.dart' as http;
 import 'package:pdfx/pdfx.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:html_unescape/html_unescape.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../services/bookmarks_service.dart';
 import '../services/reading_history_service.dart';
+import '../widgets/youtube_webview_player.dart';
 import 'pdf_viewer_page.dart';
 import 'image_viewer_page.dart';
 
@@ -34,8 +34,7 @@ class _DetailPageState extends State<DetailPage> {
   PdfControllerPinch? _pdfController;
   bool _isPdfLoading = false;
 
-  // YouTube player state
-  List<YoutubePlayerController> _youtubeControllers = [];
+  // YouTube video IDs
   List<String> _youtubeVideoIds = [];
 
   @override
@@ -56,7 +55,7 @@ class _DetailPageState extends State<DetailPage> {
         _loadPdfController(pdfUrls[0]);
       }
 
-      // Extract and initialize YouTube videos
+      // Extract YouTube video IDs
       _extractYouTubeVideos(decodedContent);
     });
   }
@@ -64,9 +63,6 @@ class _DetailPageState extends State<DetailPage> {
   @override
   void dispose() {
     _pdfController?.dispose();
-    for (var controller in _youtubeControllers) {
-      controller.dispose();
-    }
     _scrollController.dispose();
     _commentController.dispose();
     super.dispose();
@@ -238,17 +234,6 @@ class _DetailPageState extends State<DetailPage> {
     if (videoIds.isNotEmpty) {
       setState(() {
         _youtubeVideoIds = videoIds.toList();
-        _youtubeControllers = _youtubeVideoIds.map((videoId) {
-          return YoutubePlayerController(
-            initialVideoId: videoId,
-            flags: const YoutubePlayerFlags(
-              autoPlay: false,
-              mute: false,
-              enableCaption: true,
-              controlsVisibleAtStart: true,
-            ),
-          );
-        }).toList();
       });
     }
   }
@@ -782,92 +767,17 @@ class _DetailPageState extends State<DetailPage> {
                   const SizedBox(height: 24),
 
                   // YouTube Videos Section
-                  if (_youtubeControllers.isNotEmpty)
-                    ..._youtubeControllers.asMap().entries.map((entry) {
-                      final controller = entry.value;
-                      return Column(
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 16),
-                            child: YoutubePlayerBuilder(
-                              player: YoutubePlayer(
-                                controller: controller,
-                                showVideoProgressIndicator: true,
-                                progressIndicatorColor: const Color(0xFF59151E),
-                                progressColors: const ProgressBarColors(
-                                  playedColor: Color(0xFF59151E),
-                                  handleColor: Color(0xFF59151E),
-                                ),
-                              ),
-                              builder: (context, player) {
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: player,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
+                  if (_youtubeVideoIds.isNotEmpty)
+                    ..._youtubeVideoIds.map((videoId) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: YouTubeWebViewPlayer(
+                          videoId: videoId,
+                          aspectRatio: 16 / 9,
+                          autoPlay: false,
+                        ),
                       );
                     }),
-
-                  // Comments Section
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.comment, color: const Color(0xFF59151E)),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Comments',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF59151E),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        // Comments disabled due to Firebase compatibility issues
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Comments are currently disabled',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),

@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/search_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/live_update_provider.dart';
 import 'services/app_initialization_service.dart';
 import 'pages/home_page.dart';
 import 'pages/news_tab_page.dart';
+import 'pages/playlist_page.dart';
 import 'pages/bookmarks_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/recently_viewed_page.dart';
@@ -33,6 +35,7 @@ class GurubaaNewsApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => SearchProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => LiveUpdateProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
@@ -60,11 +63,13 @@ class _MainLayoutState extends State<MainLayout> {
   final List<Widget> _pages = [
     const HomePage(),
     const NewsTabPage(),
+    const PlaylistPage(),
   ];
 
   final List<String> _pageTitles = [
     'Gurubaa - Latest News',
     'News Categories',
+    'Playlists',
   ];
 
   void _onItemTapped(int index) {
@@ -128,6 +133,14 @@ class _MainLayoutState extends State<MainLayout> {
               selected: _selectedIndex == 1,
               onTap: () => _onItemTapped(1),
             ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.playlist_play),
+              title: const Text('Playlists'),
+              selected: _selectedIndex == 2,
+              onTap: () => _onItemTapped(2),
+            ),
+            const Divider(),
             ListTile(
               leading: const Icon(Icons.bookmark),
               title: const Text('My Bookmarks'),

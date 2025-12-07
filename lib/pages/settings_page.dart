@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/notification_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -85,6 +86,53 @@ class _SettingsPageState extends State<SettingsPage> {
                     onChanged: (value) => themeProvider.toggleAutoDarkMode(),
                     activeColor: Theme.of(context).primaryColor,
                   ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Notifications Section
+                _buildSectionHeader('Notifications'),
+                const SizedBox(height: 16),
+
+                Consumer<NotificationProvider>(
+                  builder: (context, notifProvider, child) {
+                    return Column(
+                      children: [
+                        _buildSettingCard(
+                          title: 'News Updates',
+                          subtitle: 'Get notified about new articles',
+                          trailing: Switch(
+                            value: notifProvider.newsEnabled,
+                            onChanged: (value) =>
+                                notifProvider.toggleNews(value),
+                            activeColor: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildSettingCard(
+                          title: 'Video Updates',
+                          subtitle: 'Get notified about new videos',
+                          trailing: Switch(
+                            value: notifProvider.videoEnabled,
+                            onChanged: (value) =>
+                                notifProvider.toggleVideo(value),
+                            activeColor: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildSettingCard(
+                          title: 'Breaking News',
+                          subtitle: 'Receive urgent breaking news alerts',
+                          trailing: Switch(
+                            value: notifProvider.breakingEnabled,
+                            onChanged: (value) =>
+                                notifProvider.toggleBreaking(value),
+                            activeColor: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 32),
